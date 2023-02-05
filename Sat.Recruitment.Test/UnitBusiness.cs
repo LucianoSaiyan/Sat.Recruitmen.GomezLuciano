@@ -5,6 +5,7 @@ using Sat.Recruitment.Cross_Cutting.Helper;
 using Sat.Recruitment.Data;
 using Sat.Recruitment.Data.Abstractions;
 using Sat.Recruitment.Data.Implementations;
+using Sat.Recruitment.Entities.DTO;
 using Sat.Recruitment.Entities.Entity;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ using static Sat.Recruitment.Entities.Entity.User;
 namespace Sat.Recruitment.Test
 {
     [CollectionDefinition("Tests", DisableParallelization = true)]
-    public class UnitTest1
+    public class UnitBusiness
     {
         #region Interfaces
 
@@ -31,7 +32,9 @@ namespace Sat.Recruitment.Test
         private readonly IDataFromFile _dataFromFile;
 
         #endregion
-        public UnitTest1()
+
+        string RelativePath = @"Files\User\{0}.json";
+        public UnitBusiness()
         {
             #region Create Instances
 
@@ -52,53 +55,14 @@ namespace Sat.Recruitment.Test
             #endregion
         }
 
-        #region Create User Test
-
-        [Fact]
-        public async Task TestUserValid()
-        {
-            UsersController userController = new UsersController(userBusiness);
-            User user = new User("Luciano", "Luciano.Gomez@gmail.com", "Benavidez 2914", "+1168473930", "Premium", 520);
-            
-            Result result = await userController.CreateUser(user);
-
-            Assert.True(result?.IsSuccess);
-            Assert.Equal(Helpers.User_Created, result.Message.TrimEnd());
-
-        }
-
-        [Fact]
-        public async Task TestUserDuplicated()
-        {
-            UsersController userController = new UsersController(userBusiness);
-            
-            User user = new User("Franco", "Franco.Perez@gmail.com", "Av. Juan G", "+534645213542", "Premium", 124);
-            
-            Result result = await userController.CreateUser(user);
-
-            Assert.Equal(Helpers.User_is_duplicated, result.Message.TrimEnd());
-
-        }
-
-        [Fact]
-        public async Task TestUserWithErrors()
-        {
-            UsersController userController = new UsersController(userBusiness);
-            User user = new User("Mike", "", "Av. Juan G", "+349 1122354215", "Normal", 124);
-            Result result = await userController.CreateUser(user);
-
-            Assert.Contains(Helpers.required, result.Message);
-           
-        }
-
-        #endregion
-
         #region Validations from Model
 
         [Fact]
         public void TestValidateErrorsfromModel()
         {
-            User user = new User("Franco", null, "", "", "Premium", 124);
+            string file = System.IO.File.ReadAllText(string.Format(RelativePath, "TestUserWithErrors"));
+            UserDTO userDTO = Newtonsoft.Json.JsonConvert.DeserializeObject<UserDTO>(file);
+            User user = Entities.Mapper.UserMapper.Map(userDTO); 
             string errors = string.Empty;
 
             //Validate Errors trough Reflection
@@ -184,43 +148,6 @@ namespace Sat.Recruitment.Test
 
         }
 
-        #endregion
-
-        #region GetListUsersfromFile
-
-        [Fact]
-        public async Task TestReadUsersFromFile()
-        {
-            StreamReader ReadUsersFromFile = await _dataFromFile.ReadUsersFromFile("Users");
-            bool result = ReadUsersFromFile.Peek() >= 0;
-
-            if (result)
-                Assert.True(result);
-            else
-                Assert.False(result);
-        }
-
-        [Fact]
-        public async Task TestGetListUsersfromFile()
-        {
-            StreamReader ReadUsersFromFile = await _dataFromFile.ReadUsersFromFile("Users");
-            List<User> ListOfUsars = await _dataFromFile.GetListUsersfromFile(ReadUsersFromFile);
-            Assert.NotEmpty(ListOfUsars);
-        }
-
-
-        [Fact]
-        public async Task TestisDuplicated()
-        {
-            User user = new User("Mike", "mike@gmail.com", "Av. Juan G", "+349 1122354215", "Normal", 124);
-            List<User> ListOfUsars = await _dataFromFile.GetListUsersfromFile(await _dataFromFile.ReadUsersFromFile("Users"));
-
-            bool isDuplicated = _userValidations.CheckisUserIsDuplicated(ListOfUsars, user);
-            if (isDuplicated)
-                Assert.True(isDuplicated);
-            else
-                Assert.False(isDuplicated);
-        }
         #endregion
 
     }

@@ -2,6 +2,7 @@
 using Sat.Recruitment.Business.Abtractions;
 using Sat.Recruitment.Business.Implementations;
 using Sat.Recruitment.Cross_Cutting.Methods;
+using Sat.Recruitment.Entities.DTO;
 using Sat.Recruitment.Entities.Entity;
 using System;
 using System.Diagnostics;
@@ -41,14 +42,16 @@ namespace Sat.Recruitment.Api.Controllers
 
         [HttpPost]
         [Route("/create-user")]
-        public async Task<Result> CreateUser(User user)
+        public async Task<Result> CreateUser(UserDTO userdto)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
             try
             {                
                 stopwatch.Start();
 
-                Tuple<User, string, bool> resultfrombusiness = await userBusiness.CreateValidUser(user);
+                User user = Entities.Mapper.UserMapper.Map(userdto);
+
+                Tuple<User, string, bool> resultfrombusiness = await userBusiness.CreateValidUser(Entities.Mapper.UserMapper.Map(userdto));
 
                 stopwatch.Stop();
                 return Result(!resultfrombusiness.Item3,

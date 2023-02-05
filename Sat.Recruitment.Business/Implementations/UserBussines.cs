@@ -25,6 +25,8 @@ namespace Sat.Recruitment.Business.Implementations
         private readonly IEmail email;
         private readonly IUserValidations userValidations;
         private readonly IDataFromFile dataFromFile;
+        StreamReader _getdatafromfile = null;
+        #region Constructors
 
         public UserBusiness(IValidations _validations, IEmail _email, IUserValidations userValidations, IDataFromFile dataFromFile)
         {
@@ -47,6 +49,8 @@ namespace Sat.Recruitment.Business.Implementations
 
         }
 
+        #endregion
+
         public async Task<Tuple<User, string, bool>> CreateValidUser(User user)
         {
             string errors = "";
@@ -62,14 +66,16 @@ namespace Sat.Recruitment.Business.Implementations
                 #region Check the user type
                 Tuple<string, bool> validateusertype = userValidations.CheckUserType(user.TypeUser);
                 if (!validateusertype.Item2)
-                    errors = UserMethods.El_tipo_de_Usuario_no_existe;
+                    errors += $"{(errors.Length > 0 ? " ," : " ")} {UserMethods.El_tipo_de_Usuario_no_existe}";
                 #endregion
 
                 if (String.IsNullOrEmpty(errors))
                     #region Check if the user Exists
                     try
                     {
-                        List<User> ListOfUsars = await dataFromFile.GetListUsersfromFile(await dataFromFile.ReadUsersFromFile("Users"));
+                        _getdatafromfile = await dataFromFile.ReadUsersFromFile("Users");
+                        List<User> ListOfUsars = await dataFromFile.GetListUsersfromFile(_getdatafromfile);
+
                         if (ListOfUsars.Count > 0)
                         {
                             isDuplicated = userValidations.CheckisUserIsDuplicated(ListOfUsars, user);
@@ -83,7 +89,10 @@ namespace Sat.Recruitment.Business.Implementations
                             errors += Helpers.The_file_doesnt_exists;
                         else
                             throw new Exception(ex.ToString());
-
+                    }
+                    finally
+                    {
+                        _getdatafromfile = null;
                     }
                 #endregion
 

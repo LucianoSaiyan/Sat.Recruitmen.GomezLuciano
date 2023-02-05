@@ -13,13 +13,15 @@ namespace Sat.Recruitment.Data.Implementations
         public Task<StreamReader> ReadUsersFromFile(string File)
         {
             string path = Directory.GetCurrentDirectory() + $"/Files/{File}.txt";
+            StreamReader reader = null;
             if (!FileExists(path))
                 throw new Exception(Helpers.The_file_doesnt_exists);
             FileStream fileStream = new FileStream(path, FileMode.Open);
-            
-            StreamReader reader = new StreamReader(fileStream);
+            reader = new StreamReader(fileStream);
+
             return Task.FromResult(reader);
         }
+
 
         static bool FileExists(string path)
         {
@@ -31,6 +33,7 @@ namespace Sat.Recruitment.Data.Implementations
         public async Task<List<User>> GetListUsersfromFile(StreamReader reader)
         {
             List<User> _users = new List<User>();
+
             while (reader.Peek() >= 0)
             {
                 string line = await reader.ReadLineAsync();
@@ -48,6 +51,7 @@ namespace Sat.Recruitment.Data.Implementations
                 _users.Add(user);
             }
             reader.Close();
+            reader.Dispose();
             return _users;
         }
 

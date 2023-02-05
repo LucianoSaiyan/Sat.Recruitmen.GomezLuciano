@@ -9,7 +9,7 @@ namespace Sat.Recruitment.Business.Implementations
 {
     public class Validations : IValidations
     {
-        
+
         #region Constructors
 
         public Validations()
@@ -24,11 +24,15 @@ namespace Sat.Recruitment.Business.Implementations
             List<string> list = new List<string>();
             foreach (PropertyInfo props in entity.GetType().GetProperties())
             {
-                if (props.PropertyType.UnderlyingSystemType == typeof(string))
-                    if (String.IsNullOrEmpty((string)props.GetValue(entity, null)))
-                        list.Add(GetErrors(props, keyValuePairs));
+                if (props.PropertyType.UnderlyingSystemType == typeof(string) 
+                    && String.IsNullOrEmpty((string)props.GetValue(entity, null)))
+                    list.Add(GetErrors(props, keyValuePairs));
+                else if((props.PropertyType.UnderlyingSystemType == typeof(decimal?) ||
+                    props.PropertyType.UnderlyingSystemType == typeof(decimal)) &&
+                    (decimal)props.GetValue(entity, null) <= 0)
+                    list.Add(GetErrors(props, keyValuePairs));
             }
-            
+
             errors = String.Join(" ,", list);
         }
 
